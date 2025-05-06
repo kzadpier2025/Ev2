@@ -1,0 +1,28 @@
+{
+    "name": "EV2",
+    "version": "1.0.0",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js"
+    },
+    "dependencies": {
+        "@prisma/client": "^6.7.0",
+        "cors": "^2.8.5",
+        "express": "^4.21.2"
+    },
+    "description": "II TLPJS",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/kzadpier2025/Ev2.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/kzadpier2025/Ev2/issues"
+    },
+    "homepage": "https://github.com/kzadpier2025/Ev2#readme",
+    "devDependencies": {
+        "prisma": "^6.7.0"
+    }
+}

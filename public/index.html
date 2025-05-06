@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recordatorios</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/uno.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>Recordatorios</h1>
+      <div v-if="loading">Cargando...</div>
+      <div v-else>
+        <ul>
+          <li v-for="reminder in reminders" :key="reminder.id">
+            {{ reminder.content }} - {{ reminder.createdAt }} - Importante: {{ reminder.important }}
+             <button @click="eliminarReminder(reminder.id)">Eliminar</button>
+             <button @click="actualizarReminder(reminder.id)">Actualizar</button>
+          </li>
+        </ul>
+        <form @submit.prevent="crearReminder">
+          <input v-model="newReminderContent" placeholder="Contenido del recordatorio" />
+          <input type="checkbox" v-model="newReminderImportant" /> Importante
+          <button type="submit">Crear Recordatorio</button>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      const { createApp } = Vue;
+
+      createApp({
+        data() {
+          return {
+            loading: true,
+            reminders: [],
+            newReminderContent: '',
+            newReminderImportant: false,
+          };
+        },
+        async mounted() {
+          try {
+            const response = await fetch('/api/reminders', {
+                headers: {
+                    'X-Authorization': 'el_token_del_usuario'  //TODO: Esto debería obtenerse del login
+                }
+            });
+            this.reminders = await response.json();
+          } catch (error) {
+            console.error('Error al obtener los recordatorios:', error);
+            // Aquí podrías mostrar un mensaje de error al usuario
+          } finally {
+            this.loading = false;
+          }
+        },
+        methods: {
+          async crearReminder() {
+            try {
+              const response = await fetch('/api/reminders', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-Authorization': 'el_token_del_usuario' //TODO: Esto debería obtenerse del login
+                },
+                body: JSON.stringify({
+                  content: this.newReminderContent,
+                  important: this.newReminderImportant,
+                }),
+              });
+              const newReminder = await response.json();
+              this.reminders.push(newReminder);
+              this.newReminderContent = '';
+              this.newReminderImportant = false;
+            } catch (error) {
+              console.error('Error al crear el recordatorio:', error);
+            }
+          },
+          async eliminarReminder(id) {
+                try {
+                    const response = await fetch(`/api/reminders/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-Authorization': 'el_token_del_usuario'  //TODO: Esto debería obtenerse del login
+                        }
+                    });
+                    if (response.status === 204) {
+                        this.reminders = this.reminders.filter(r => r.id !== id);
+                    } else {
+                        console.error('Error al eliminar el recordatorio:', response.statusText);
+                    }
+                } catch (error) {
+                    console.error('Error al eliminar el recordatorio:', error);
+                }
+            },
+            async actualizarReminder(id) {
+                try {
+                    const reminderToUpdate = this.reminders.find(r => r.id === id);
+                    if (!reminderToUpdate) {
+                        console.error('Recordatorio no encontrado');
+                        return;
+                    }
+
+                    const newContent = prompt("Ingrese el nuevo contenido", reminderToUpdate.content);
+                    const newImportant = confirm("Es importante?");
+
+                    const response = await fetch(`/api/reminders/${id}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Authorization': 'el_token_del_usuario'  //TODO: Esto debería obtenerse del login
+                        },
+                        body: JSON.stringify({
+                            content: newContent,
+                            important: newImportant
+                        }),
+                    });
+                    const updatedReminder = await response.json();
+
+                    this.reminders = this.reminders.map(r => r.id === id ? { ...r, ...updatedReminder } : r);
+
+
+                } catch (error) {
+                    console.error('Error al actualizar el recordatorio:', error);
+                }
+            }
+        },
+      }).mount('#app');
+    </script>
+  </body>
+</html>
