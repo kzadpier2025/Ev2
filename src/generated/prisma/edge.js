@@ -129,7 +129,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\Users\\MAURICIO\\Desktop\\Zertamen2\\Ev2\\src\\generated\\prisma",
+      "value": "C:\\Users\\MAURICIO\\Desktop\\Cursor\\Zertamen2\\Ev2\\src\\generated\\prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -143,7 +143,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "C:\\Users\\MAURICIO\\Desktop\\Zertamen2\\Ev2\\prisma\\schema.prisma",
+    "sourceFilePath": "C:\\Users\\MAURICIO\\Desktop\\Cursor\\Zertamen2\\Ev2\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {

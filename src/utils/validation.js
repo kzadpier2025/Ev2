@@ -1,43 +1,37 @@
-const { object, string, boolean } = require('valibot');
+const { object, string, boolean, minLength, maxLength, parse } = require('valibot');
 
 /**
- * Esquema de Validación para Recordatorios
+ * Esquema para el login
  */
-const ReminderSchema = object({
-  content: string({
-    required_error: 'El contenido es requerido',
-    max_length: 120,
-  }),
-  important: boolean(),
+const loginSchema = object({
+  username: string([minLength(1, 'El nombre de usuario es requerido')]),
+  password: string([minLength(1, 'La contraseña es requerida')])
 });
 
 /**
- * Esquema de Validación para el Login
+ * Esquema para los recordatorios
  */
-const LoginSchema = object({
-    username: string({
-        required_error: "El nombre de usuario es requerido",
-        min_length: 3,
-    }),
-    password: string({
-        required_error: "La contraseña es requerida",
-        min_length: 6,
-    }),
+const reminderSchema = object({
+  content: string([
+    minLength(1, 'El contenido es requerido'),
+    maxLength(120, 'El contenido no puede tener más de 120 caracteres')
+  ]),
+  important: boolean()
 });
 
 /**
- * Función de Validación Genérica
+ * Función de Validación
  */
-const validate = (schema, data) => {
-  const result = schema.safeParse(data);
-  if (!result.success) {
-    throw new Error(result.error.message);
+function validate(schema, data) {
+  try {
+    return parse(schema, data);
+  } catch (error) {
+    throw new Error(error.message);
   }
-  return result.data;
-};
+}
 
 module.exports = {
-  ReminderSchema,
-  LoginSchema,
-  validate,
+  loginSchema,
+  reminderSchema,
+  validate
 };

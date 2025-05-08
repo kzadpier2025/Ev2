@@ -3,19 +3,11 @@
 
 generator client {
   provider = "prisma-client-js"
-  output    = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
-}
-
-model Reminder {
-  id        Int      @id @default(autoincrement())
-  content   String
-  createdAt DateTime @default(now())
-  important Boolean  @default(false)
+  url      = "file:./dev.db"
 }
 
 model User {
@@ -23,4 +15,11 @@ model User {
   name     String
   password String
   token    String?
+}
+
+model Reminder {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+  important Boolean  @default(false)
 }

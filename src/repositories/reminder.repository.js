@@ -1,5 +1,4 @@
-//const { PrismaClient } = require('@prisma/client');
-const { PrismaClient } = require('../src/generated/prisma');
+const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 /**
@@ -11,7 +10,12 @@ const ReminderRepository = {
    * @returns {Promise<Reminder[]>} - Un array de todos los recordatorios.
    */
   async findAll() {
-    return prisma.reminder.findMany();
+    return prisma.reminder.findMany({
+      orderBy: [
+        { important: 'desc' },
+        { createdAt: 'desc' }
+      ]
+    });
   },
 
   /**
@@ -21,7 +25,7 @@ const ReminderRepository = {
    */
   async findById(id) {
     return prisma.reminder.findUnique({
-      where: { id },
+      where: { id: String(id) }
     });
   },
 
@@ -36,8 +40,8 @@ const ReminderRepository = {
     return prisma.reminder.create({
       data: {
         content: data.content,
-        important: data.important,
-      },
+        important: data.important || false
+      }
     });
   },
 
@@ -51,8 +55,11 @@ const ReminderRepository = {
    */
   async update(id, data) {
     return prisma.reminder.update({
-      where: { id },
-      data,
+      where: { id: String(id) },
+      data: {
+        content: data.content,
+        important: data.important
+      }
     });
   },
 
@@ -62,9 +69,9 @@ const ReminderRepository = {
    * @returns {Promise<void>}
    */
   async delete(id) {
-     await prisma.reminder.delete({
-        where: { id },
-     });
+    return prisma.reminder.delete({
+      where: { id: String(id) }
+    });
   },
 };
 

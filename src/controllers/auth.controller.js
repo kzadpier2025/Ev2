@@ -1,7 +1,6 @@
-const UserRepository = require('../repositories/user.repository');
-const { generateToken } = require('../utils/auth'); // Importa la función generateToken
-const { LoginSchema } = require('../utils/validation');
-const { validate } = require('../utils/validation'); // Importa la función validate
+const { PrismaClient } = require('@prisma/client');
+const crypto = require('crypto');
+const prisma = new PrismaClient();
 
 /**
  * Controlador de Autenticación
@@ -14,21 +13,42 @@ const AuthController = {
    */
   async login(req, res) {
     try {
-      // Validar la entrada usando Valibot
-      const { username, password } = validate(LoginSchema, req.body);
-      const user = await UserRepository.validateCredentials(username, password);
+      const { username, password } = req.body;
+      
+      const user = await prisma.user.findUnique({
+        where: { username }
+      });
+
       if (!user) {
-        return res.status(401).json({ error: 'Credenciales inválidas' });
+        return res.status(401).json({
+          error: 'Credenciales inválidas'
+        });
       }
-      const token = generateToken(user); // Genera el token
-      await UserRepository.updateToken(username, token);
+
+      const [salt, storedHash] = user.password.split(':');
+      const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+
+      if (hash !== storedHash) {
+        return res.status(401).json({
+          error: 'Credenciales inválidas'
+        });
+      }
+
+      const token = crypto.randomBytes(48).toString('hex');
+      
+      await prisma.user.update({
+        where: { username },
+        data: { token }
+      });
+
       res.json({
         username: user.username,
-        token: token,
-        name: user.name,
+        token,
+        name: user.name
       });
     } catch (error) {
-      res.status(400).json({ error: error.message }); // Devuelve el mensaje de error de Valibot
+      console.error('Error en login:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
     }
   },
 
@@ -38,13 +58,7 @@ const AuthController = {
    * @param {express.Response} res - El objeto de la respuesta de Express.
    */
   async logout(req, res) {
-    try {
-      const { username } = req.user; // Obtiene el nombre de usuario del usuario autenticado
-      await UserRepository.updateToken(username, null); // Elimina el token
-      res.status(204).end();
-    } catch (error) {
-      res.status(500).json({ error: 'Error al cerrar sesión' });
-    }
+    res.status(200).json({ message: 'Sesión cerrada exitosamente' });
   },
 };
 

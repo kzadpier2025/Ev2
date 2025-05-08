@@ -1,6 +1,5 @@
-//const { PrismaClient } = require('@prisma/client');
-const { PrismaClient } = require('../src/generated/prisma');
-const { scryptSync } = require('crypto');
+const { PrismaClient } = require('@prisma/client');
+const crypto = require('crypto');
 const prisma = new PrismaClient();
 
 /**
@@ -14,7 +13,7 @@ const UserRepository = {
    */
   async findByUsername(username) {
     return prisma.user.findUnique({
-      where: { username: username },
+      where: { username }
     });
   },
 
@@ -55,11 +54,31 @@ const UserRepository = {
     }
 
     const [salt, storedHash] = user.password.split(':');
-    const inputHash = scryptSync(password, salt, 64).toString('hex');
+    const inputHash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
     const passwordMatch = inputHash === storedHash;
 
     return passwordMatch ? user : null;
   },
+
+  async validatePassword(inputPassword, storedPassword) {
+    const [salt, storedHash] = storedPassword.split(':');
+    const hash = crypto.pbkdf2Sync(inputPassword, salt, 1000, 64, 'sha512').toString('hex');
+    return hash === storedHash;
+  },
+
+  async createUser(username, password, name) {
+    const salt = crypto.randomBytes(16).toString('hex');
+    const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+    const hashedPassword = `${salt}:${hash}`;
+
+    return prisma.user.create({
+      data: {
+        username,
+        password: hashedPassword,
+        name
+      }
+    });
+  }
 };
 
 module.exports = UserRepository;

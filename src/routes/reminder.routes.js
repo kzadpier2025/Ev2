@@ -1,13 +1,23 @@
 const express = require('express');
 const router = express.Router();
-const ReminderController = require('../controllers/reminder.controller');
+const { reminderSchema } = require('../utils/validation');
+const { validate } = require('../utils/validation');
+const { create, getAll, deleteReminder } = require('../controllers/reminder.controller');
 const authMiddleware = require('../middlewares/auth.middleware');
 
+// Middleware de validación
+function validateReminder(req, res, next) {
+    try {
+        req.body = validate(reminderSchema, req.body);
+        next();
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+}
+
 // Rutas de recordatorios
-router.get('/', authMiddleware, ReminderController.getAllReminders); // Obtener todos los recordatorios
-router.get('/:id', authMiddleware, ReminderController.getReminderById); // Obtener un recordatorio por ID
-router.post('/', authMiddleware, ReminderController.createReminder); // Crear un nuevo recordatorio
-router.patch('/:id', authMiddleware, ReminderController.updateReminder); // Actualizar un recordatorio
-router.delete('/:id', authMiddleware, ReminderController.deleteReminder); // Eliminar un recordatorio
+router.post('/', authMiddleware, validateReminder, create);
+router.get('/', authMiddleware, getAll);
+router.delete('/:id', authMiddleware, deleteReminder);
 
 module.exports = router;

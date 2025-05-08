@@ -1,13 +1,23 @@
 const { PrismaClient } = require('@prisma/client');
-const { scryptSync, randomBytes } = require('crypto');
+const crypto = require('crypto');
 
 const prisma = new PrismaClient();
 
 async function main() {
+  // Eliminar el usuario existente si existe
+  try {
+    await prisma.user.delete({
+      where: { username: 'admin' }
+    });
+    console.log('Usuario existente eliminado');
+  } catch (error) {
+    console.log('No se encontró usuario existente para eliminar');
+  }
+
   // Generar salt y hash de la contraseña
-  const salt = randomBytes(16).toString('hex');
-  const password = 'password'; // La contraseña por defecto es "password"
-  const hashedPassword = scryptSync(password, salt, 64).toString('hex');
+  const salt = crypto.randomBytes(16).toString('hex');
+  const password = 'certamen123'; // La contraseña correcta
+  const hashedPassword = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
 
   // Crear el usuario inicial
   const user = await prisma.user.create({
